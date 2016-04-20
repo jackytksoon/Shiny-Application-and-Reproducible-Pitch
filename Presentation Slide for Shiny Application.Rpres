@@ -1,0 +1,95 @@
+Presentation Slide for Shiny App - Search Hospitals Name by Rank,State and Outcome
+========================================================
+author: Tan Kim Soon
+date: 20/04/2016
+
+Introduction
+========================================================
+
+The application created allow users to search for a hospital name among 54 states, 3 outcomes and rank that user define.
+
+The outcome include:
+
+- Heart Attack
+- Heart Failure
+- Pneumonia
+
+Data of this App
+========================================================
+
+The data for this App come from the Hospital Compare web site (http://hospitalcompare.hhs.gov) run by the U.S. Department of Health and Human Services.
+
+The purpose of the web site is to provide data and
+information about the quality of care at over 4,000 Medicare-certified hospitals in the U.S.
+
+This dataset essentially covers all major U.S. hospitals.
+
+This dataset is used for a variety of purposes, including determining whether hospitals should be fined for not providing high quality care to patients
+
+Function that use in this App
+========================================================
+There is a function in the app load via the helper.R file which will get the result of the hospital name. The function is 'rankhospital' which will take 3 argument:
+
+- state
+- outcome
+- rank
+
+```{r function, echo=FALSE}
+rankhospital <- function(state,outcome,num="best") {
+    ##Read outcome data
+    outcomedata <- read.csv("outcome-of-care-measures.csv",
+                            colClasses = "character")
+    filteroutcome <- outcomedata[,c(2,7,11,17,23)]
+    colnames(filteroutcome) <- c("Hospital name","State","heart attack"
+                                 ,"heart failure","pneumonia")
+    filteroutcome[,3] <- suppressWarnings(as.numeric(filteroutcome[,3],na.rm=TRUE))
+    filteroutcome[,4] <- suppressWarnings(as.numeric(filteroutcome[,4],na.rm=TRUE))
+    filteroutcome[,5] <- suppressWarnings(as.numeric(filteroutcome[,5],na.rm=TRUE))
+    filterstate <- subset(filteroutcome,State== state)
+    outcomename <- colnames(filteroutcome[,3:5])
+    
+    sumofoutcome <- sum(outcome != outcomename)
+    
+    ##Check that state and outcome are valid
+    if (nrow(filterstate)==0) {stop("invalid state")}
+    
+    else if (sumofoutcome==3) {stop("invalid outcome")}
+    
+    else if (num=="best") {
+        sortoutcome <- filterstate[order(filterstate[,outcome],
+                                         filterstate$"Hospital name",
+                                         decreasing=FALSE), ]
+        print(sortoutcome[1,1])
+    }
+    
+    else if (num=="worst") {
+        sortoutcome <- filterstate[order(filterstate[,outcome],
+                                         filterstate$"Hospital name",
+                                         decreasing=TRUE), ]
+        print(sortoutcome[1,1])
+    }
+    
+    else {sortoutcome <- filterstate[order(filterstate[,outcome],
+                                           filterstate$"Hospital name",
+                                           decreasing=FALSE), ]
+    print(sortoutcome[num,1])
+    }
+    
+    ## Return hospital name in that state with the given rank
+    ## 30-day death rate
+    
+}
+```
+
+Below is the example of the function and the result
+
+```{r run, echo=TRUE}
+rankhospital("WA", "heart attack", 7)
+```
+
+Remark for this App
+========================================================
+
+- If there is a tie for the hospital for a given outcome, then the hospital names will be sorted in alphabetical order and the first hospital in that set should be chosen (i.e. if hospitals "b", "c", and "f" are tied for best, then hospital "b" should be returned).
+
+- The function of this App was created under one of the Data Science Course assignment (R Programming week 3 assignment.)
